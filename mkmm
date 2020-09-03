@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# mkmm -- make MAAS machines
+#  --kvm = create a libvirt KVM
+#
+# -i = interactive mode
+# -b = batch mode
+
+if [ "$1" == "--kvm" -a "$2" == "-i" ]
+   then
+	read -p "architecture? " arch
+	read -p "MAC address? " macaddr
+	read -p "power ID? " powerid
+	read -p "power address? " poweraddr
+	read -p "power password? " powerpw
+	maas admin machines create \
+	architecture=$arch \
+	mac_addresses=$macaddr \
+	power_type=virsh \
+	power_parameters_power_id=$powerid \
+	power_parameters_power_address=$poweraddr \
+	power_parameters_power_pass=$powerpw
+elif [ "$1" == "--kvm" -a "$2" == "-b" ]
+	then
+	maas admin machines create \
+	architecture=$3 \
+	mac_addresses=$4 \
+	power_type=virsh \
+	power_parameters_power_id=$5 \
+	power_parameters_power_address=$6 \
+	power_parameters_power_pass=$7
+fi

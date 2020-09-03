@@ -1,0 +1,35 @@
+#!/bin/bash 
+# lsmm - list maas machines 
+# make sure to chmod this file so it can execute 
+# and make sure it's in the path (if you're not typing "./") 
+# 
+# for the "-vmhost -c" option, don't forget to type $3 as the ID of the VM host 
+# 
+if [ -z "$1" ] 
+   then 
+   	maas admin machines read | jq -r '(["HOSTNAME","SYSID","POWER","STATUS", 
+	"OWNER", "POOL", "VLAN","FABRIC","SUBNET"] | (., map(length*"-"))), 
+	(.[] | [.hostname, .system_id, .power_state, .status_name, .owner, .pool.name, 
+	.boot_interface.vlan.name, .boot_interface.vlan.fabric, 
+	.boot_interface.links[0].subnet.name]) | @tsv' | column -t 
+elif [ "$1" == "-t" ] 
+     then 
+	maas admin machines read | jq -r '(["HOSTNAME","SYSID","POWER","STATUS", 
+	"OWNER", "TAGS", "POOL", "VLAN","FABRIC","SUBNET"] | (., map(length*"-"))), 
+	(.[] | [.hostname, .system_id, .power_state, .status_name, .owner // "-", 
+	.tag_names[0] // "-", .pool.name, 
+	.boot_interface.vlan.name, .boot_interface.vlan.fabric, 
+	.boot_interface.links[0].subnet.name]) | @tsv' | column -t 
+elif [ "$1" == "--vmhost" -a -z "$2" ]
+     then 
+	maas admin vm-hosts read | jq -r '(["ID","VM-HOST","SYSID","CORES","USED","RAM", 
+	"USED","STORAGE", "USED"] | (., map(length*"-"))), (.[]| [.id,.name,.host.system_id, 
+	.total.cores, .used.cores, .total.memory, .used.memory,.total.local_storage, 
+	.used.local_storage]) | @tsv' | column -t 
+elif [ "$1" == "--vmhost" -a "$2" == "-c" ]
+     then 
+	maas admin vm-host read $3 | jq -r '(["ID","NAME","POOL","ZONE", 
+	"CPU-O/C", "RAM-O/C", "TAGS"] | (., map(length*"-"))), (.| [.id,.name, 
+	.pool.name, .zone.name,.cpu_over_commit_ratio, 
+	.memory_over_commit_ratio, .tags[]]) | @tsv' | column -t
+fi
